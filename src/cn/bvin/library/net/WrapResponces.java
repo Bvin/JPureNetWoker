@@ -1,5 +1,6 @@
 package cn.bvin.library.net;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,15 +21,27 @@ public class WrapResponces {
 	
 	private InputStream inputStream;
 	
-	
 	private long contentLength;
 
+	private Exception e;
+	
+	private String content;
+	
 	public WrapResponces(InputStream inputStream, long contentLength) {
 		super();
 		this.inputStream = inputStream;
 		this.contentLength = contentLength;
 	}
 
+	public WrapResponces(String content) {
+		super();
+		this.content = content;
+	}
+
+	public WrapResponces(Exception error) {
+		super();
+		this.e = error;
+	}
 
 	public InputStream getInputStream() {
 		return inputStream;
@@ -37,7 +50,6 @@ public class WrapResponces {
 	public long getContentLength() {
 		return contentLength;
 	}
-
 
 	@Deprecated
 	public int getStatusCode() {
@@ -49,51 +61,44 @@ public class WrapResponces {
 		this.statusCode = statusCode;
 	}
 	
-	/**以字符Buffer的方式来读*/
-	private String readString(InputStream inputStream) {
-		StringBuilder sb = new StringBuilder();
-		if (inputStream!=null) {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream)); 
-			int read;
-			char[] buff = new char[1024];
-			try {
-				while ((read = reader.read(buff)) != -1) {
-					sb.append(buff, 0, read);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return sb.toString();
-	}
-	
-	/**一行一行读*/
-	private String readStringByLine(InputStream inputStream) {
-		StringBuffer sb = new StringBuffer();
-		if (inputStream != null) {
-			String readLine;
-			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-			try {
-				while ((readLine = reader.readLine()) != null) {
-					sb.append(readLine).append("\n");
-				}
-				reader.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		return sb.toString();
+	public Exception getError() {
+		return e;
 	}
 
-
-	
 	@Override
 	public String toString() {
 		if (inputStream!=null) {
-			return readStringByLine(inputStream);
+			return readString(inputStream).toString();
+		}else if (e!=null) {
+			return e.getMessage();
+		}else if (content!=null) {
+			return content;
 		}else {
 			return super.toString();
 		}
 	}
 	
+	private StringBuilder readString(InputStream inputStream) {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+		StringBuilder sb = new StringBuilder();
+		try {
+			String readLine;
+			while ((readLine = reader.readLine()) != null) {
+				StringBuilder sbs = new StringBuilder();
+				sb.append(readLine).append("\n");
+			}
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return sb;
+	}
+	
+	/**
+	 * 没有异常发生就是成功，或者判断是否有实体内容
+	 * @return: boolean 请求是否成功
+	 */
+	public boolean isSuccess() {
+		return e==null;
+	}
 }
