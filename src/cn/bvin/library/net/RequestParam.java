@@ -53,6 +53,7 @@ public class RequestParam {
 	public RequestParam(MapParam params) {
 		super();
 		this.params = params;
+		this.buffer = StringUtils.generateUrlString(params.get()).getBytes();
 	}
 
 	public byte[] getBuffer() {
