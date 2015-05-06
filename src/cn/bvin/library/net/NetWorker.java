@@ -120,21 +120,25 @@ public class NetWorker {
 			
 			//2.执行请求得到HttpURLConnection
 			HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
-			httpConn.setDoOutput(true);
-			//3.获取一个输出流，用于向服务器写入数据 
-            OutputStream outputStream = httpConn.getOutputStream();  
-            //如果request是UploadRequest并且请求参数还有文件，就上传文件写入到服务器
-            if (param.getFile()!=null&&request instanceof UploadRequest) {//向服务器写文件，上传文件
-            	if (uploadListener!=null) {
-            		this.uploadListener.onUploadStart(request.getUrl());
+            if (param==null) {
+            	//没有参数
+			}else {
+				httpConn.setDoOutput(true);
+				//3.获取一个输出流，用于向服务器写入数据 
+	            OutputStream outputStream = httpConn.getOutputStream();  
+	          //如果request是UploadRequest并且请求参数还有文件，就上传文件写入到服务器
+				if(param.getFile()!=null&&request instanceof UploadRequest) {//向服务器写文件，上传文件
+	            	if (uploadListener!=null) {
+	            		this.uploadListener.onUploadStart(request.getUrl());
+					}
+	            	uploadFile(outputStream, param.getFile());
+				} else if (param.getBuffer()!=null) {//写Byte数组，Post数据
+					write(outputStream, param.getBuffer());
+				} else {
+					//其他方式...
 				}
-            	uploadFile(outputStream, param.getFile());
-			} else if (param.getBuffer()!=null) {//写Byte数组，Post数据
-				write(outputStream, param.getBuffer());
-			} else {
-				//其他方式...
+	            outputStream.close();
 			}
-            outputStream.close();
             //4.获取输入流，读成字符串图片等数据或者写入文件
 			if (httpConn.getResponseCode() == 200) {
 				if (request instanceof DownloadRequest) {
